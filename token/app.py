@@ -32,3 +32,21 @@ def registro():
     else:
         msg = "El usuario ya existe"
     return jsonify({'msg':msg})
+
+@app.route('/auth/login',methods=['POST'])
+def login():
+    user = request.get_json()
+    usuario = User(email=user['email'],password=user['password'])
+    searchUser =  User.query.filter_by(email=usuario.email).first()
+    if searchUser:
+        validation = bcrypt.check_password_hash(searchUser.password,user['password'])
+        if validation:
+            auth_token = usuario.enconde_auto_token(user_id=searchUser.id)
+            responseObj = {
+                'status':'exitoso',
+                'mensaje':'Login',
+                'auth_token':auth_token
+            }
+            return jsonify(responseObj)
+    return jsonify({'mensaje':'Datos incorrectos'})
+        
