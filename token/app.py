@@ -6,6 +6,7 @@ from config import BaseConfig
 from database import db
 from models import User
 from sqlalchemy import exc
+from functools import wraps
 
 app = Flask(__name__)
 app.config.from_object(BaseConfig)
@@ -50,3 +51,59 @@ def login():
             return jsonify(responseObj)
     return jsonify({'mensaje':'Datos incorrectos'})
         
+def obtenerInfo(token):
+    if token:
+        resp = User.decode_auth_token(token)
+        user = User.query.filter_by(id=resp).first()
+        if user:
+            usuario = {
+                'status':'Exitoso',
+                'data':{
+                    'user_id':user.id,
+                    'email':user.email,
+                    'admin':user.admin,
+                    'registered_on':user.registered_on
+                }
+            }
+            return usuario
+        else:
+            return {'status':'Faliido'}
+
+def tokenCheck(f):
+    wraps(f)
+    def verificar(*args,**kwargs):
+        token = None
+        if 'token' in request.headers:
+            token = request.headers['token']
+        if not token:
+            return jsonify({'mensaje': 'Token no encontrando'})
+        try:
+            info = obtenerInfo(token)
+            print(info)
+            if info['status'] == 'Fallido':
+                return jsonify({'mensaje': 'Token invalido'})
+        except:
+            return jsonify({'mensaje': 'Token invalido'})
+        
+        return f(info['data'],*args,**kwargs)
+    return verificar
+
+@app.route('/usuarios',methods=['GET'])
+@tokenCheck
+def getUser(usuario):
+    if usuario['admin']:
+        output=[]
+        usuarios = User.query.all()
+        for user in usuarios:
+            obj = {
+                'id':user.id,
+                'email':user.email,
+                'password':user.password,
+                'registered_on':user.registered_on,
+                'admin':user.admin
+            }
+            output.append(obj)
+        return jsonify({
+            'status':'Exitoso',
+            'data':output
+        })
