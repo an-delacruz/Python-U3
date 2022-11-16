@@ -51,7 +51,7 @@ class Image(db.Model):
     type = db.Column(db.String(128),nullable=False)
     data = db.Column(db.LargeBinary,nullable=False)
     rendered_date = db.Column(db.Text,nullable=False)
-    user_id = db.Column(db.Integer,db.foreignKey['user.id'])
+    user_id = db.Column(db.Integer,db.ForeignKey('user.id'))
     
-    region = db.relantionship('User',backref='users')
+    region = db.relationship('User',backref='users')
     
