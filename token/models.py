@@ -43,3 +43,15 @@ class User(db.Model):
         except jwt.InvalidTokenError:
             return 'Invalid token. Please log in again.'
         
+
+
+class Image(db.Model):
+    __tablename = 'user_images'
+    id_imagen = db.Column(db.Integer,primary_key=True)
+    type = db.Column(db.String(128),nullable=False)
+    data = db.Column(db.LargeBinary,nullable=False)
+    rendered_date = db.Column(db.Text,nullable=False)
+    user_id = db.Column(db.Integer,db.foreignKey['user.id'])
+    
+    region = db.relantionship('User',backref='users')
+    
